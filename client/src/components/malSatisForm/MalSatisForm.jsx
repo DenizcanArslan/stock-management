@@ -28,6 +28,14 @@ const MalSatisForm = () => {
         e.preventDefault();
 
         try {
+             // Stok kodunu kontrol etmek için API'ye GET isteği gönder
+        const res = await axios.get(`/api/mal_satis/checkStokKodu/?stok_kodu=${formData.stok_kodu}`);
+
+        // Eğer stok kodu mevcutsa kullanıcıya uyarı göster ve formu göndermeyi engelle
+        if (res.data.exists) {
+            alert('Bu stok kodu zaten mevcut. Form gönderilemedi.');
+            return;
+        }
             // axios POST isteği
             const response = await axios.post('/api/mal_satis/addNewItem', formData);
 

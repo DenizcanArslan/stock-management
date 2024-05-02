@@ -12,6 +12,10 @@ const MalKabulForm = () => {
         fiyat: "",
     });
 
+
+     // Stok kodunun mevcut olup olmadığını kontrol eden state
+     const [stokKoduMevcut, setStokKoduMevcut] = useState(false);
+
     
 
     // Form alanlarını güncellemek için işlev
@@ -23,39 +27,44 @@ const MalKabulForm = () => {
         });
     };
 
-    // Form gönderildiğinde yapılacak işlemler
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+  
+  // Form gönderildiğinde yapılacak işlemler
+const handleSubmit = async (e) => {
+    e.preventDefault();
 
-        try {
-            // axios POST isteği
-            const response = await axios.post('/api/mal_kabul/addNewItem', formData);
+    try {
+        // Stok kodunu kontrol etmek için API'ye GET isteği gönder
+        const response = await axios.get(`/api/mal_kabul/checkStokKodu/?stok_kodu=${formData.stok_kodu}`);
 
-            if (response.status === 201) {
-                console.log('Başarılı gönderim:', response.data);
-                // Başarılı gönderim sonrası yapılacak işlemler
-                // Örneğin, başarı mesajı veya başka bir sayfaya yönlendirme
+        // Eğer stok kodu mevcutsa kullanıcıya uyarı göster ve formu göndermeyi engelle
+        if (response.data.exists) {
+            alert('Bu stok kodu zaten mevcut. Form gönderilemedi.');
+            return;
+        }
 
-                setFormData({
-                    stok_kodu: "",
-                    stok_adi: "",
-                    tarih: "",
-                    birim: "",
-                    fiyat: "",
-                });
+        // Stok kodu mevcut değilse POST isteği gönder
+        const postResponse = await axios.post('/api/mal_kabul/addNewItem', formData);
+
+        if (postResponse.status === 201) {
+            console.log('Başarılı gönderim:', postResponse.data);
+            // Başarılı gönderim sonrası yapılacak işlemler
+            setFormData({
+                stok_kodu: "",
+                stok_adi: "",
+                tarih: "",
+                birim: "",
+                fiyat: "",
+            });
             // Başarı uyarısını göster
             window.alert('Veriler başarıyla gönderildi!');
-
-
-            } else {
-                console.error('Gönderim başarısız:', response.statusText);
-                // Başarısız gönderim durumunda yapılacak işlemler
-            }
-        } catch (error) {
-            console.error('Gönderim sırasında hata:', error);
-            // Hata durumunda yapılacak işlemler
+        } else {
+            console.error('Gönderim başarısız:', postResponse.statusText);
         }
-    };
+    } catch (error) {
+        console.error('Gönderim sırasında hata:', error);
+    }
+};
+
 
     return (
         <div className="mt-5 flex flex-col items-center">
